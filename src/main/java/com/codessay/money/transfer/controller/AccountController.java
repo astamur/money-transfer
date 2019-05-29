@@ -5,11 +5,15 @@ import com.codessay.money.transfer.model.TransferParams;
 import com.codessay.money.transfer.service.AccountService;
 import com.codessay.money.transfer.util.HttpUtils;
 import com.codessay.money.transfer.util.Paths;
+import io.javalin.BadRequestResponse;
 import io.javalin.Context;
+import io.javalin.NotFoundResponse;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
 
 public class AccountController {
+    private static final String accountIdRegex = "^\\d+-\\d+$";
+
     private AccountService accountService;
 
     public AccountController(AccountService accountService) {
@@ -32,7 +36,15 @@ public class AccountController {
     }
 
     public void getAccount(Context ctx) {
-        ctx.json(accountService.get(ctx.pathParam("id")));
+        var id = getAndValidateId(ctx);
+
+        var account = accountService.get(id);
+
+        if (account == null) {
+            throw new NotFoundResponse(String.format("Account with id '%s' not found", id));
+        }
+
+        ctx.json(account);
     }
 
     public void transfer(Context ctx) {
@@ -48,5 +60,15 @@ public class AccountController {
         params.setAmount(HttpUtils.requiredQueryParamDouble(ctx, "amount"));
 
         return params;
+    }
+
+    private String getAndValidateId(Context ctx) {
+        var id = ctx.pathParam("id");
+
+        if (!id.matches(accountIdRegex)) {
+            throw new BadRequestResponse(String.format("Account id should match this pattern: '%s'", accountIdRegex));
+        }
+
+        return id;
     }
 }

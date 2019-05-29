@@ -5,13 +5,18 @@ import com.codessay.money.transfer.repository.AccountRepository;
 import com.codessay.money.transfer.repository.binder.BigDecimalBinder;
 import jetbrains.exodus.entitystore.Entity;
 import jetbrains.exodus.entitystore.EntityIterable;
+import jetbrains.exodus.entitystore.EntityRemovedInDatabaseException;
 import jetbrains.exodus.entitystore.PersistentEntityStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 public class InMemoryAccountRepository implements AccountRepository {
+    private static final Logger log = LoggerFactory.getLogger(InMemoryAccountRepository.class);
+
     private static final String ENTITY_TYPE = "Account";
 
     private final PersistentEntityStore store;
@@ -47,7 +52,14 @@ public class InMemoryAccountRepository implements AccountRepository {
 
     @Override
     public Account get(String id) {
-        return null;
+        return store.computeInReadonlyTransaction(txn -> {
+            try {
+                return toAccount(txn.getEntity(txn.toEntityId(id)));
+            } catch (EntityRemovedInDatabaseException e) {
+                log.debug("Entity with id '{}' does not exist", id);
+                return null;
+            }
+        });
     }
 
     @Override
@@ -71,7 +83,13 @@ public class InMemoryAccountRepository implements AccountRepository {
 
     @Override
     public void delete(String id) {
-
+        store.executeInTransaction(txn -> {
+            try {
+                txn.getEntity(txn.toEntityId(id)).delete();
+            } catch (EntityRemovedInDatabaseException e) {
+                log.debug("Entity with id '{}' does not exist", id);
+            }
+        });
     }
 
     private static Account toAccount(Entity entity) {

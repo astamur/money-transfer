@@ -10,6 +10,7 @@ import io.javalin.Javalin;
 import io.javalin.json.JavalinJackson;
 import jetbrains.exodus.entitystore.PersistentEntityStore;
 import jetbrains.exodus.entitystore.PersistentEntityStores;
+import org.eclipse.jetty.http.MimeTypes;
 
 public class App {
     public static final ObjectMapper mapper;
@@ -47,7 +48,9 @@ public class App {
     public void startup() {
         JavalinJackson.configure(mapper);
 
-        var server = Javalin.create().port(port);
+        var server = Javalin.create()
+                .port(port)
+                .defaultContentType(MimeTypes.Type.APPLICATION_JSON_UTF_8.asString());
 
         server.get(Paths.INDEX, ctx -> ctx.result("Index"));
 
