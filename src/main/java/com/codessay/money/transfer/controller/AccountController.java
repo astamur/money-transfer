@@ -11,7 +11,7 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.jetbrains.annotations.NotNull;
 
 public class AccountController {
-    public static final String ID_PARAM = "id";
+    private static final String ID_PARAM = "id";
 
     private AccountRepository accountRepository;
 
