@@ -2,72 +2,69 @@ package com.codessay.money.transfer.controller;
 
 import com.codessay.money.transfer.model.Account;
 import com.codessay.money.transfer.model.TransferParams;
-import com.codessay.money.transfer.service.AccountService;
+import com.codessay.money.transfer.repository.AccountRepository;
 import com.codessay.money.transfer.util.HttpUtils;
-import com.codessay.money.transfer.util.Paths;
 import io.javalin.BadRequestResponse;
 import io.javalin.Context;
-import io.javalin.NotFoundResponse;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
+import org.jetbrains.annotations.NotNull;
 
 public class AccountController {
-    private static final String accountIdRegex = "^\\d+-\\d+$";
+    public static final String ID_PARAM = "id";
 
-    private AccountService accountService;
+    private AccountRepository accountRepository;
 
-    public AccountController(AccountService accountService) {
-        this.accountService = accountService;
+    public AccountController(AccountRepository accountRepository) {
+        this.accountRepository = accountRepository;
     }
 
-    public void addAccount(Context ctx) {
-        Account account = Account.validate(ctx.bodyValidator(Account.class));
+    public void addAccount(@NotNull Context context) {
+        var account = Account.validate(context.bodyValidator(Account.class));
 
-        accountService.add(account);
+        accountRepository.add(account);
 
-        ctx.status(HttpStatus.CREATED_201)
-                .header(HttpHeader.LOCATION.name(), Paths.getAccountLocation(account.getId()));
+        context.status(HttpStatus.CREATED_201)
+                .header(HttpHeader.LOCATION.name(), HttpUtils.formatAccountLocation(account.getId()));
     }
 
-    public void getAllAccounts(Context ctx) {
-        accountService.get();
-
-        ctx.json(accountService.get());
+    public void getAccount(@NotNull Context context) {
+        context.json(accountRepository.getAll(getAndValidateId(context)));
     }
 
-    public void getAccount(Context ctx) {
-        var id = getAndValidateId(ctx);
+    public void getAllAccounts(@NotNull Context context) {
+        context.json(accountRepository.getAll());
+    }
 
-        var account = accountService.get(id);
+    public void updateAccount(@NotNull Context context) {
+        var account = Account.validate(context.bodyValidator(Account.class));
+        var id = getAndValidateId(context);
 
-        if (account == null) {
-            throw new NotFoundResponse(String.format("Account with id '%s' not found", id));
+        if (account.getId() != null && !account.getId().equals(id)) {
+            throw new BadRequestResponse("Account id update is not allowed");
         }
 
-        ctx.json(account);
-    }
-
-    public void transfer(Context ctx) {
-        accountService.transfer(getParams(ctx));
-        ctx.json(accountService.get(ctx.pathParam("id")));
-    }
-
-    private TransferParams getParams(Context ctx) {
-        var params = new TransferParams();
-
-        params.setFrom(HttpUtils.requiredQueryParamString(ctx, "from"));
-        params.setTo(HttpUtils.requiredQueryParamString(ctx, "to"));
-        params.setAmount(HttpUtils.requiredQueryParamDouble(ctx, "amount"));
-
-        return params;
-    }
-
-    private String getAndValidateId(Context ctx) {
-        var id = ctx.pathParam("id");
-
-        if (!id.matches(accountIdRegex)) {
-            throw new BadRequestResponse(String.format("Account id should match this pattern: '%s'", accountIdRegex));
+        if (account.getId() == null) {
+            account.setId(id);
         }
+
+        accountRepository.update(account);
+    }
+
+    public void deleteAccount(@NotNull Context context) {
+        accountRepository.delete(getAndValidateId(context));
+    }
+
+    public void transfer(@NotNull Context context) {
+        var params = TransferParams.validate(context.bodyValidator(TransferParams.class));
+
+        accountRepository.transfer(params);
+    }
+
+    private String getAndValidateId(@NotNull Context ctx) {
+        var id = ctx.pathParam(ID_PARAM);
+
+        HttpUtils.validateAccountId(id, ID_PARAM);
 
         return id;
     }

@@ -11,6 +11,11 @@ repositories {
     jcenter()
 }
 
+sourceCompatibility = 1.11
+targetCompatibility = 1.11
+
+mainClassName = 'com.codessay.money.transfer.App'
+
 dependencies {
     // Core
     implementation "io.javalin:javalin:$versions.javalin"
@@ -31,7 +36,12 @@ test {
     useJUnitPlatform()
 }
 
-sourceCompatibility = 1.11
-targetCompatibility = 1.11
+jar {
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
 
-mainClassName = 'com.codessay.money.transfer.App'
+    from {
+        configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}

@@ -7,6 +7,13 @@ import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
 public class Account {
+    public static final String ACCOUNT_ID_REGEX = "^\\d+-\\d+$";
+
+
+    public static final String PROPERTY_ID = "id";
+    public static final String PROPERTY_BALANCE = "balance";
+    public static final String PROPERTY_CURRENCY = "currency";
+
     private static final Pattern pattern = Pattern.compile("^[A-Z]{3}$");
 
     private String id;
