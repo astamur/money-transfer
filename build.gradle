@@ -1,0 +1,37 @@
+buildscript {
+    apply from: 'versions.gradle'
+}
+
+plugins {
+    id 'java'
+    id 'application'
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    // Core
+    implementation "io.javalin:javalin:$versions.javalin"
+    implementation "com.fasterxml.jackson.core:jackson-databind:$versions.jackson"
+    implementation "org.jetbrains.xodus:xodus-entity-store:1.3.0"
+
+    // Logging
+    implementation "org.slf4j:slf4j-api:$versions.slf4j"
+    implementation "ch.qos.logback:logback-classic:$versions.logback"
+
+    // Tests
+    testImplementation "io.rest-assured:rest-assured:$versions.restAssured"
+    testImplementation "org.junit.jupiter:junit-jupiter-api:$versions.junit"
+    testRuntime "org.junit.jupiter:junit-jupiter-engine:$versions.junit"
+}
+
+test {
+    useJUnitPlatform()
+}
+
+sourceCompatibility = 1.11
+targetCompatibility = 1.11
+
+mainClassName = 'com.codessay.money.transfer.App'

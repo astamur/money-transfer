@@ -1,0 +1,8 @@
+.DS_Store
+.gradle
+.idea
+.test-db
+.db
+*.iml
+build/
+out/

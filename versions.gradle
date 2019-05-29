@@ -1,0 +1,14 @@
+ext.versions = [
+        // Core
+        javalin    : '2.8.0',
+        jackson    : '2.9.9',
+        guice      : '4.2.0',
+
+        // Logging
+        slf4j      : '1.7.26',
+        logback    : '1.2.3',
+
+        // Tests
+        junit      : '5.4.2',
+        restAssured: '4.0.0'
+]
